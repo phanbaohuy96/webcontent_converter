@@ -36,11 +36,18 @@ public class SwiftWebcontentConverterPlugin: NSObject, FlutterPlugin {
                     if #available(iOS 11.0, *) {
                         let configuration = WKSnapshotConfiguration()
                         var size = self.webView.scrollView.contentSize
-                        size.height = size.height + 50
+                        size.height = size.height
                         print("height = \(size.height)")
-                        configuration.rect = CGRect(origin: .zero, size: size)
+                        let cgRect = CGRect(origin: .zero, size: size).offsetBy(dx: 0, dy: 50)
+                        configuration.rect = cgRect
                         self.webView.snapshotView(afterScreenUpdates: true)
                         self.webView.takeSnapshot(with: configuration) { (image, error) in
+                            if let error = error {
+                                self.dispose()
+                                print("error: \(error.localizedDescription)")
+                                result(FlutterError(code: "snapshotFailed", message: error.localizedDescription, details: nil))
+                                return
+                            }
                             guard let data = image!.jpegData(compressionQuality: 1) else {
                                 result( bytes )
                                 self.dispose()
